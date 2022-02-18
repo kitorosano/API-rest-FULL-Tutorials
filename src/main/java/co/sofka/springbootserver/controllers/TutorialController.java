@@ -19,7 +19,7 @@ public class TutorialController {
   @Autowired
   TutorialRepository tutorialRepository;
   
-  // ***** CREATE ***** //
+  // ========== CREATE ========== //
   
   /**
    * Metodo para crear un nuevo objeto Tutorial, utilizando el modelo del body del request.
@@ -36,8 +36,7 @@ public class TutorialController {
     }
   }
   
-  
-  // ***** READ ***** //
+  // ========== READ ========== //
 
   /**
    * Metodo para obtener todos los objetos Tutorial, utilizando el parametro title opcionalmente, para filtrar por titulo
@@ -47,7 +46,7 @@ public class TutorialController {
   @GetMapping("/tutorials")
   public ResponseEntity<List<TutorialModel>> getAllTutorials(@RequestParam(required = false) String title){
     try {
-      List<TutorialModel> tutorials = new ArrayList<>();
+      List<TutorialModel> tutorials = new ArrayList<TutorialModel>();
       
       if(title == null)
         tutorialRepository.findAll().forEach(tutorials::add);
@@ -70,7 +69,7 @@ public class TutorialController {
    * @return Un response exitoroso con el tutorial, o un response vacio por no haber encontrado el tutorial con el id.
    */
   @GetMapping("/tutorials/{id}")
-  public ResponseEntity<TutorialModel> getTutorialById(@PathVariable("id") long id) {
+  public ResponseEntity<TutorialModel> getTutorialById(@PathVariable(value = "id") long id) {
     Optional<TutorialModel> tutorialData = tutorialRepository.findById(id);
     
     if (tutorialData.isPresent()) {
@@ -103,7 +102,7 @@ public class TutorialController {
    * @return Un response exitoroso con el precio de un tutorial, o un response vacio por no haber encontrado el tutorial con el id.
    */
   @GetMapping("/tutorials/{id}/price")
-  public ResponseEntity<Float> getTutorialPriceById(@PathVariable("id") long id) {
+  public ResponseEntity<Float> getTutorialPriceById(@PathVariable(value = "id") long id) {
     Optional<TutorialModel> tutorialData = tutorialRepository.findById(id);
     
     if (tutorialData.isPresent()) {
@@ -114,7 +113,7 @@ public class TutorialController {
   }
   
   
-  // ***** UPDATE ***** //
+  // ========== UPDATE ========== //
   
   /**
    * Metodo para modificar un objeto tutorial mediante su id
@@ -123,7 +122,7 @@ public class TutorialController {
    * @return Un response exitoso con el tutorial modificado, o un response vacio por no haber encontrado el tutorial con el id.
    */
   @PutMapping("/tutorials/{id}")
-  public ResponseEntity<TutorialModel> updateTutorial(@PathVariable("id") long id, @RequestBody TutorialModel tutorial){
+  public ResponseEntity<TutorialModel> updateTutorialById(@PathVariable(value = "id") long id, @RequestBody TutorialModel tutorial){
     Optional<TutorialModel> tutorialData = tutorialRepository.findById(id);
     
     if(tutorialData.isPresent()){
@@ -133,8 +132,7 @@ public class TutorialController {
       _tutorial.setPublished(tutorial.isPublished());
       _tutorial.setPrice(tutorial.getPrice());
       return new ResponseEntity<>(tutorialRepository.save(_tutorial), HttpStatus.OK);
-    } else
-    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    } else return new ResponseEntity<>(HttpStatus.NOT_FOUND);
   }
   
   /**
@@ -143,8 +141,8 @@ public class TutorialController {
    * @param tutorial
    * @return Un response exitoso con la lista de tutoriales modificados, o un response vacio por no haber encontrado tutoriales con el titulo.
    */
-  @PutMapping("/tutorials/{title}")
-  public ResponseEntity<List<TutorialModel>> updateTutorial(@PathVariable("title") String title, @RequestBody TutorialModel tutorial){
+  @PutMapping(value = "/tutorials", params = "title")
+  public ResponseEntity<List<TutorialModel>> updateTutorialByTitle(@RequestParam(value = "title") String title, @RequestBody TutorialModel tutorial){
     List<TutorialModel> tutorialData = tutorialRepository.findByTitleContaining(title);
     List<TutorialModel> updatedTutorials = new ArrayList<TutorialModel>();
     
@@ -162,7 +160,7 @@ public class TutorialController {
   }
   
   
-  // ***** DELETE ***** //
+  // ========== DELETE ========== //
   
   /**
    * Metodo para eliminar un tutorial mediante su id
@@ -170,10 +168,10 @@ public class TutorialController {
    * @return Un response exitoso con un mensaje si se ha eliminado correctamente, o un response fallido.
    */
   @DeleteMapping("/tutorials/{id}")
-  public ResponseEntity<String> deleteTutorial(@PathVariable("id") long id) {
+  public ResponseEntity<String> deleteTutorialById(@PathVariable(value = "id") long id) {
     try {
       tutorialRepository.deleteById(id);
-      return new ResponseEntity<>("Tutorials DELETE!! ",HttpStatus.NO_CONTENT);
+      return new ResponseEntity<>("Tutorials DELETED!! ",HttpStatus.NO_CONTENT);
     } catch (Exception e) {
       return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
     }
@@ -184,11 +182,13 @@ public class TutorialController {
    * @param title
    * @return Un response exitoso con un mensaje si se han eliminado correctamente, o un response fallido.
    */
-  @DeleteMapping("/tutorial/{title}")
-  public ResponseEntity<String> deleteTutorial(@PathVariable("title") String title) {
+  @DeleteMapping(value = "/tutorials", params = "title")
+  public ResponseEntity<String> deleteTutorialByTitle(@RequestParam(value = "title") String title) {
+    List<TutorialModel> deleteTutorials = tutorialRepository.findByTitleContaining(title);
+
     try {
-      tutorialRepository.deleteByTitle(title);
-      return new ResponseEntity<>("Tutorial DELETE!! ",HttpStatus.NO_CONTENT);
+      deleteTutorials.forEach((tutorial) -> tutorialRepository.deleteById(tutorial.getId()));
+      return new ResponseEntity<>("Tutorials DELETED!! ",HttpStatus.NO_CONTENT);
     } catch (Exception e) {
       return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
     }
